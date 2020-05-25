@@ -1,177 +1,187 @@
-//Design and implement a data structure for Least Recently Used (LRU) cache. It should support the following operations: get and put.
-// get(key) - Get the value (will always be positive) of the key if the key exists in the cache, otherwise return -1.
-// put(key, value) - Set or insert the value if the key is not already present. When the cache reached its capacity, it should invalidate the least recently used item before inserting a new item.
-// The cache is initialized with a positive capacity.
 #include <iostream>
-#include <map>
+#include <cstdio>
 #include <unordered_map>
 
 using namespace std;
 
-typedef struct Double_linked_list double_linked_list;
-typedef struct Node node;
-
-struct Node{
+class node{
+public:
   int key;
   int value;
-  node *prev = NULL;
-  node *next = NULL;
+
+  node *next;
+  node *prev;
+
+  node(){
+    this->next = NULL;    
+    this->prev = NULL;    
+  }
+  
+  node(int key, int value){
+    this->key = key;
+    this->value = value;
+    this->next = NULL;    
+    this->prev = NULL;    
+  }
+
+  void set_next(node *n){
+    this->next = n; 
+  }
+
+  void set_prev(node *n){
+    this->prev = n; 
+  }
+
+  void print_node(){
+    cout << "(" << this->key << ", " << this->value << ") ";
+  }
 };
 
-node *create_node(int key, int value){
-  node *n = (node *) malloc(sizeof(node));
-  n->value = value;
-  n->key = key;
-  return n;
-}
-
-//Fix ghost nodes into head and tail to not handling the NULL nodes
-struct Double_linked_list{
-  int nodes = 0;
-  int nodes_limit;
-  node *head = NULL;
-  node *tail = NULL;
-};
-
-void print_dll(double_linked_list &l){
-  node *current = l.head->next;
-  while(current != l.tail){
-    cout << "(k: " << current->key << ", v: " << current->value << ") ";
-    current = current->next;
-  }
-  cout << endl;
-}
-
-double_linked_list *create_dll(int limit){
-  double_linked_list *l = (double_linked_list *) malloc(sizeof(double_linked_list));
-  l->nodes_limit = limit;
-
-  l->head = create_node(-2,-2);
-  l->tail = create_node(-1,-1);
-  l->head->next = l->tail;
-  l->tail->prev = l->head;
-
-  return l;
-}
-
-void add_new_node_dll(double_linked_list &l, int key, int value, unordered_map<int,node *> &hash){
-  node *n = create_node(key, value);
-  hash[key] = n;
-  if(l.nodes < l.nodes_limit){ //Insert the new node in the last position
-    node *real_tail = l.tail->prev;
-
-    n->next = l.tail;
-    n->prev = real_tail;
-    real_tail->next = n;
-    l.tail->prev = n;
-
-    l.nodes++;
-  }
-  else{ //Delete the first and insert the new node in the last position
-    node *del_target = (l.head)->next;
-    (l.head)->next = del_target->next;
-    (del_target->next)->prev = l.head;
-    hash.erase(del_target->key);
-    free(del_target);
-
-    ((l.tail)->prev)->next = n;
-    n->prev = (l.tail)->prev;
-    n->next = l.tail;
-    (l.tail)->prev = n;
-  }
-}
-
-void move_node_to_end(double_linked_list &l, node *target){
-  node *target_prev = target->prev;
-  node *target_next = target->next;
-
-  target_prev->next = target_next;
-  target_next->prev = target_prev;
-
-  target->next = l.tail;
-  target->prev = (l.tail)->prev;
-  ((l.tail)->prev)->next = target; 
-  l.tail->prev = target;
-
-}
-
-
-class LRUCache {
+class dll{
 public:
-  double_linked_list *l;
-  unordered_map<int,node *> hash;
+  node *head;
+  int n_elements;
 
-  int cap;
-
-  LRUCache(int capacity) {
-    l = create_dll(capacity);
-    cap = capacity;
+  dll(){
+    this->head = new node();
+    this->n_elements = 0;
   }
 
-  int get(int key) {
-    if(hash.find(key) != hash.end()){
-      node *n = hash[key];
-      move_node_to_end(*l, n);
-      return n->value;
+  ~dll(){
+    node *current = this->head;
+    node *next; 
+    while(current != NULL){
+      next = current->next;
+      delete current;
+      current = next;
     }
-    else return -1;
   }
 
-  void put(int key, int value){
-    if(hash.find(key) != hash.end()){ //Found
-      node *target = hash[key]; 
-      move_node_to_end(*l, target);
-    }
-    else add_new_node_dll(*l, key, value, hash);
+  void add(node *target){
+    node *current = this->head;
+    while(current->next != NULL) current = current->next;
+    current->set_next(target);
+    target->set_prev(current);
+    this->n_elements++;
   }
 
+  void del_target(node *target){
+    if(target->next != NULL)
+      (target->next)->set_prev(target->prev);
+    (target->prev)->set_next(target->next);
+    delete target;
+    this->n_elements--;
+  }
 
-  void print_hash(){
-    unordered_map<int,node *>::iterator it = hash.begin();
-    cout << "HASH: ";
-    while(it != hash.end()){
-      cout << "(k: " << (*it).first << " , v: " << (*it).second << "), ";
-      it++;
+  void del_first(){
+    node *target = this->head->next;
+    if(target != NULL){
+      if(target->next != NULL)
+        (target->next)->set_prev(target->prev);
+      (target->prev)->set_next(target->next);
+      delete target;
+      this->n_elements--;
     }
+  }
+
+  int get_first_key(){
+    node *target = this->head->next;
+    if(target != NULL){
+      return target->key;
+    }
+    return -1;
+  }
+
+  void print_dll(){
+    node *current = this->head->next;
+    while(current != NULL){
+      current->print_node();
+      current = current->next;
+    }    
     cout << endl;
   }
-
-  void print_lru(){
-    print_dll(*l);
-  }
 };
+
+
+class LRUCache{
+public:
+  int max_elements;
+  unordered_map<int, node*> elements;
+  dll *l;
+
+  LRUCache(int capacity) {
+    max_elements = capacity;
+    l = new dll();
+  }
+
+  ~LRUCache() {
+    delete l;
+  }
+    
+  int get(int key) {
+    if(elements.find(key) != elements.end()){
+      int value = (*(elements[key])).value;
+
+      l->del_target(elements[key]);
+      node *target = new node(key, value);
+      l->add(target);
+      elements[key] = target;      
+      return value;
+    }
+    return -1;
+  }
+  
+  void put(int key, int value) {
+    if(elements.find(key) != elements.end()){
+      l->del_target(elements[key]);
+      node *target = new node(key, value);
+      l->add(target);
+      elements[key] = target;
+    }
+    else{
+      if(l->n_elements == this->max_elements){
+        int first_key = l->get_first_key();
+        elements.erase(first_key);
+        l->del_first();
+      }
+      node *target = new node(key, value);
+      l->add(target);
+      elements.emplace(key, target);
+    }
+  }
+
+};
+
 
 
 int main(){
-  LRUCache cache(2);
-  cache.put(1, 1);
-  // cache.print_lru();
-  // cache.print_hash();
-  
-  cache.put(2, 2);
-  // cache.print_lru();
-  // cache.print_hash();
-  
-  cout << cache.get(1) << endl;       // returns 1
-  // cache.print_lru();
-  
-  cache.put(3, 3);                    // evicts key 2
-  // cache.print_lru();
-  // cache.print_hash();
-  
-  cout << cache.get(2) << endl;       // returns -1 (not found)
-  // cache.print_lru();
-  
-  cache.put(4, 4);                    // evicts key 1
-  // cache.print_lru();
-  // cache.print_hash();
-  
-  cout << cache.get(1) << endl;       // returns -1 (not found)
-  // cache.print_lru();
-  cout << cache.get(3) << endl;       // returns 3
-  // cache.print_lru();
-  cout << cache.get(4) << endl;       // returns 4
-  // cache.print_lru();
+  LRUCache *l = new LRUCache(2);
+
+  l->put(2,1);
+  l->put(1,1);
+  l->get(2);
+  l->put(4,1);
+  l->get(1);
+  l->get(2);
+  l->put(4,1);
+
+  // l->put(1,1);
+  // l->put(2,1);
+  // l->put(3,1);  
+  // l->put(4,1);
+  // l->put(5,1);
+  // l->put(5,1);
+  // l->put(5,1);
+  // l->put(5,1);
+
+  // l->put(2,1);
+  // l->put(2,2);
+  // l->get(2);
+  // l->put(1,1);
+  // l->put(4,1);
+  // l->get(2);
+
+  delete l;
 
   return 0;
 }
