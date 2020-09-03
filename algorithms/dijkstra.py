@@ -1,14 +1,28 @@
+def print_path(root, parents, destination):
+	stack = []
+	while destination != root:
+		stack.append(destination)
+		destination = parents[destination]
 
-def dijkstra(graph, root):
+	print("Path: " + str(root), end=" ")
+	for i in reversed(range(len(stack))):
+		print(str(stack[i]), end=" ")
+	print()
+
+#destination is used only when print_path is True
+def dijkstra(graph, root, destination, path=True):
 	dist = [float('inf')]* len(graph)
+	parents = [-1]* len(graph)
 	dist[root] = 0
 	solved = [root]
 
 	while(len(solved) != len(graph)):
 		#child = [child_index, weight]
 		for child in graph[solved[-1]]:
-			dist[child[0]] = min(dist[child[0]], dist[solved[-1]]+child[1])
-		
+			if dist[solved[-1]]+child[1] < dist[child[0]]: 
+				dist[child[0]] = min(dist[child[0]], dist[solved[-1]]+child[1])
+				parents[child[0]] = solved[-1]
+
 		smallest = float('inf')
 		next_target = -1
 		for node,distance in enumerate(dist):
@@ -17,6 +31,7 @@ def dijkstra(graph, root):
 				next_target = node
 		solved.append(next_target)
 		
+	print_path(root, parents, destination)
 	return dist
 
 #edge list item -> [source, destination, weight]
@@ -51,4 +66,4 @@ if __name__ == '__main__':
 	graph = build_graph(num_nodes, edge_list)
 	# for line in graph:
 		# print(line)
-	print(dijkstra(graph, 0))
+	print(dijkstra(graph, 0, 4, True))
