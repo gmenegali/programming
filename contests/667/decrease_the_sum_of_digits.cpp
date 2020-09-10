@@ -30,36 +30,40 @@ int main(){
 		cin >> n >> s;
 		digits = count_digits(n);
 
-		int digit, count = 0, target=-1;
+		int digit, sum = 0;
 		larger = 0, result = 0;
 		for(int i=digits-1; i>=0; i--){
-			digit = ((n % (ll)pow(10,i+1))/((ll)pow(10,i+1)/10));
-			count += digit;
+			digit = ((n % (ll)pow(10,i+1))/((ll)pow(10,i)));
+			sum += digit;
 
-			if(count < s){
+			if(sum < s){
 				larger = (larger*10)+digit;
 			}
 
-			if(count >= s){
-				target = i;
+
+			if(sum > s){
 				break;
 			}
 		}
 
-
-		if(target == -1){
+		if(sum <= s){
 			result = 0;
 		}
 
 		else{
-			larger  += 1;
-			result = (larger * pow(10, target+1)) - n;
+			if(count_digits(larger) >= count_digits(n)){
+				result = (ll) pow(10, count_digits(n)) - n;
+			}
+			else{
+				larger++;
+				while(larger < n){
+					larger *= 10;
+				}
+				result = larger-n;
+			}
 		}
 
-
-		cout << target << endl;
-		// cout << digits << endl;
-		cout << result << endl << endl;
+		cout << result << endl;
 		t--;
 	}
 
