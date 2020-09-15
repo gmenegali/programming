@@ -8,13 +8,17 @@ using namespace std;
  * if the number isn't in the vector
  */
 int binary_search(vector<int> &nums, int min, int max, int target){
-  if(min > max) return -1; //Failed
+  if(min > max) //Failed 
+  return -1; 
 
-  int middle = (min+max)/2;
-  if(nums[middle] == target) return middle;
+  int middle = min + ((max-min)/2);
+  if(nums[middle] == target)
+    return middle;
 
-  if(nums[middle] > target) return binary_search(nums, min, middle-1, target);
-  if(nums[middle] < target) return binary_search(nums, middle+1, max, target);
+  if(nums[middle] > target)
+    return binary_search(nums, min, middle-1, target);
+  if(nums[middle] < target)
+    return binary_search(nums, middle+1, max, target);
 
   return -1;
 }
