@@ -14,78 +14,88 @@ void printVec(vector<int> &v){
 }
 
 bool abs_sort(int a, int b){
-	return abs(a) < abs(b);
+	return abs(a) > abs(b);
 }
 
 int main(){
 	int t, n, x;
 	ll result = 1;
 	vector<int> module;
+	// int a;
 		
 	cin >> t;
 	while(t){
 		cin >> n;
-		int positives = 0, negatives = 0, zeros = 0;
+		int zeros = 0;
+		int positives = 0;
 		for(int i=0; i<n; i++){
 			cin >> x;
-			module.push_back(x);
-			if(x>0)
-				positives++;
-			else if(x == 0)
-				zeros++;
-			else
-				negatives++;
-		}
 
-		sort(module.begin(), module.end(), abs_sort);
-		printVec(module);
+			if(x > 0)
+				positives++;
+			if(x == 0)
+				zeros++;
+			module.push_back(x);
+		}
 
 		result = 1;
-		//Will be positive
-		if(positives >= 1){
-			int result_positive = 0, result_negative = 0;
-			int last_positive, last_negative;
-			vector<int> ans;
+		sort(module.begin(), module.end(), abs_sort);
+		// printVec(module);
 
-			for(int i=n-1; i>=0; i--){
-				if(module[i] > 0){
-					last_positive = module[i];
-					result_positive++;
-				} else{
-					last_negative = module[i];
-					result_negative++;
-				}
-				ans.push_back(module[i]);
-			}
-
-			if(result_negative % 2 != 0){
-				int first_positive = -1, first_negative = 1;
-				for(int i=n-6; i>=0; i--){
-					if(first_positive == -1 and module[i] > 0){
-						first_positive = module[i];
-					}
-					if(first_negative == 1 and module[i] < 0){
-						first_negative = module[i];
-					}
-				}
-
-				if(first_positive != -1 and first_negative != 1){
-					// if(abs())
-				}
-
-			}
-
-		}
-		else if(zeros == 0){
-			for(int i=0; i<5; i++){
+		if(positives > 0){
+			int negatives = 0, i_last_negative = -1, i_last_positive = -1;
+			for(int i=0; i<5; i++){			
 				result *= module[i];
+				if(module[i] > 0){
+					i_last_positive = i;
+				}
+
+				if(module[i] < 0){
+					i_last_negative = i;
+					negatives++;
+				}
+			}
+
+			int i_first_positive = -1, i_first_negative = -1;
+			for(int i=5; i<n; i++){			
+				if(i_first_positive == -1 and module[i] > 0){
+					i_first_positive = i;
+				}
+				if(i_first_negative == -1 and module[i] < 0){
+					i_first_negative = i;
+				}
+			}
+
+			ll possible_result1 = 1, possible_result2 = 1;
+			if(i_last_negative != -1 and i_first_positive != -1){
+				swap(module[i_last_negative], module[i_first_positive]);
+				for(int i=0; i<5; i++){			
+					possible_result1 *= module[i];
+				}		
+				swap(module[i_last_negative], module[i_first_positive]);
+				result = max(result, possible_result1);
+			}
+
+			if(i_last_positive != -1 and i_first_negative != -1){
+				swap(module[i_last_positive], module[i_first_negative]);
+				for(int i=0; i<5; i++){			
+					possible_result2 *= module[i];
+				}
+				swap(module[i_last_positive], module[i_first_negative]);
+				result = max(result, possible_result2);
 			}
 		}
 		else{
-			result = 0;
+			for(int i=n-1; i>=n-5; i--){			
+				result *= module[i];
+			}
 		}
-		
+
+		if(zeros > 0)
+			result = max(result, (ll) 0);
+
 		cout << result << endl; 
+		// cout << negatives << " " << n << endl << endl;
 		module.clear();
 		t--;
 	}
