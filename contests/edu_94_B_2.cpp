@@ -4,51 +4,50 @@
 
 using namespace std;
 
-#define ll unsigned long long int
+unordered_map<string,int> memo;
 
-ll solution(ll p, ll f, ll cnts, ll cntw, ll s, ll w){
-	ll result = 0, fs, fw, maximum = 0;
-	if(s > w){ // Make the sword the lightest 
-		swap(s, w);
-		swap(cnts, cntw);
-	}
+int solution(int p, int f, int cnts, int cntw, int s, int w, int np, int nf){
+	int result = 0;
 
-	ll maxSwordsToP = min(cnts, p/s);
-	for(ll i=0; i<=maxSwordsToP; i++){
-		result = 0;
-		ll wPair = min(cntw, (p-s*i)/w);
-		result += i + wPair;
-		
-		fs = min(cnts-i, f/s);
-		if(fs > 0){
-			result += fs;
-			fw = min(cntw-wPair, (f-s*fs)/w);
-		} else {
-			fw = min(cntw-wPair, f/w);
-		}
-		if(fw > 0)
-			result += fw;
+	string key = to_string(p) + "-" + to_string(f) + "-" + to_string(cnts) + "-" + to_string(cntw);
+	if(memo.find(key) != memo.end()){
+		return memo[key];
+	} 
 
-		maximum = max(maximum, result);
+	if(((p < s and f < s) or cnts == 0) and ((p < w and f < w) or cntw == 0) ){
+		return np+nf;
 	}
 	
-	return maximum;
+	if(cnts > 0 and p >= s)
+		result = max(result, solution(p-s, f, cnts-1, cntw, s, w, np+1, nf));
 
+	if(cnts > 0 and f >= s)
+		result = max(result, solution(p, f-s, cnts-1, cntw, s, w, np, nf+1));
+	
+	if(cntw > 0 and p >= w)
+		result = max(result, solution(p-w, f, cnts, cntw-1, s, w, np+1, nf));
+	
+	if(cntw > 0 and f >= w)
+		result = max(result, solution(p, f- w, cnts, cntw-1, s, w, np, nf+1));
+
+	memo.emplace(key, result);
+	return result;
 
 }
 
 
 int main(){
-	ll t, p, f, cnts, cntw, s, w;
+	int t, p, f, cnts, cntw, s, w, result;
 	
 	cin >> t;
 	while(t){
 		cin >> p >> f;
 		cin >> cnts >> cntw;
 		cin >> s >> w;
-		cout << solution(p, f, cnts, cntw, s, w) << endl;
+		result = solution(p, f, cnts, cntw, s, w, 0, 0);
+		cout << result << endl;
 		t--;
-	} 
+	}
 
 	return 0;
 }
